@@ -7,6 +7,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Stream;
 
 public class MovieTheatreService {
 
@@ -45,23 +47,25 @@ public class MovieTheatreService {
     }
 
     public List<String> findMovie(String title) {
-        List<String> result = new ArrayList<>();
-        for (Map.Entry<String, List<Movie>> entry : shows.entrySet()) {
+        /*List<String> result = new ArrayList<>();
+        for (Entry<String, List<Movie>> entry : shows.entrySet()) {
             for (Movie movie : entry.getValue()) {
                 if (movie.getTitle().equals(title) & !result.contains(entry.getKey())) {
                     result.add(entry.getKey());
                 }
             }
         }
-        return result;
-/*        return shows.entrySet().stream()
-                .filter(c -> c.getValue().stream().filter(v -> v.getTitle().equals(title)))
-                .map(Map.Entry::getKey)
-                .toList();*/
+        return result;*/
+
+        return shows.entrySet().stream()
+                .filter(k -> k.getValue().stream().anyMatch(m -> m.getTitle().equals(title)))
+                .map(e -> e.getKey())
+                .toList();
+
     }
 
     public LocalTime findLatestShow(String title) {
-        LocalTime result = LocalTime.of(0,0);
+        /*LocalTime result = LocalTime.of(0,0);
         for (Map.Entry<String, List<Movie>> entry : shows.entrySet()) {
             for (Movie movie : entry.getValue()) {
                 if (movie.getTitle().equals(title) & movie.getStartTime().isAfter(result)) {
@@ -73,6 +77,11 @@ public class MovieTheatreService {
             throw new IllegalArgumentException("No theatre found!");
         } else {
             return result;
-        }
+        }*/
+
+        return shows.entrySet().stream().flatMap(m -> m.getValue().stream())
+                .filter(m -> m.getTitle().equals(title))
+                .sorted(Comparator.comparing(Movie::getStartTime).reversed())
+                .findFirst().orElseThrow(() -> new IllegalArgumentException("Not found.")).getStartTime();
     }
 }
